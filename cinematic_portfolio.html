@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rahul Patil — Cinematic Journey</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- GSAP for animations, Lenis for buttery smooth cinematic scrolling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Space Grotesk"', 'sans-serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            /* Desktop Layout Variables: Road is dead center */
+            --road-pos: 50%;
+            --road-width: 140px;
+            /* Cards take exactly half the screen, minus half the road, minus padding */
+            --card-width: calc(50% - (var(--road-width) / 2) - 3rem);
+        }
+
+        @media (max-width: 1024px) {
+            :root {
+                /* Mobile Layout Variables: Road moves to the left */
+                --road-pos: 60px;
+                --road-width: 80px;
+                /* Cards take the remaining space on the right */
+                --card-width: calc(100% - var(--road-width) - 2rem);
+            }
+        }
+
+        body {
+            background-color: #f0f9ff;
+            color: #334155;
+            overflow-x: hidden;
+            /* Hide scrollbar for a cleaner cinematic feel */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* The scrolling dashed line of the road */
+        .road-line-pattern {
+            background-image: repeating-linear-gradient(to bottom, #0ea5e9 0%, #0ea5e9 20%, transparent 20%, transparent 100%);
+            background-size: 4px 60px;
+        }
+
+        /* Premium glassmorphism for content cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+            transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* The "Honey" inspired glowing hover state adapted to sky-blue */
+        .glass-card:hover, .glow-button:hover {
+            border-color: rgba(14, 165, 233, 0.6);
+            box-shadow: 0 20px 50px -10px rgba(14, 165, 233, 0.3), 0 0 30px rgba(14, 165, 233, 0.4), inset 0 1px 0 rgba(255,255,255,0.9);
+            transform: translateY(-8px) scale(1.01);
+        }
+
+        /* Noise texture for cinematic film feel (Base64 for 0% CPU cost) */
+        .noise-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAD/////////////////////////////////l+53AAAACHRSTlMAERIYIignO8/n1vQAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAwSURBVDjLvY3BDQAwCAJB2H/nkxpoT8B8z8C9gJSApICkgKSApICkgKSApICkgKSAt8x7Bq8i/C9QAAAAAElFTkSuQmCC");
+            background-repeat: repeat;
+        }
+    </style>
+</head>
+<body class="selection:bg-sky-200 selection:text-sky-900">
+
+    <!-- Cinematic Video Background (Inverted for Light Theme to create dark particles) -->
+    <video autoplay loop muted playsinline class="fixed inset-0 w-full h-full object-cover pointer-events-none z-0 mix-blend-multiply opacity-30" style="filter: invert(1);">
+        <source src="vidssave.com [Free Download] Falling Snow Realistic Overlay Loop 1080p.mp4" type="video/mp4">
+    </video>
+
+    <!-- Cinematic Grain Overlay -->
+    <div class="noise-bg"></div>
+
+    <!-- Ambient glowing background strictly centered around the road -->
+    <div class="fixed top-0 bottom-0 w-[600px] pointer-events-none z-0 mix-blend-multiply opacity-40"
+         style="left: var(--road-pos); transform: translateX(-50%); background: radial-gradient(circle at 50% 70%, #bae6fd 0%, transparent 60%);">
+    </div>
+
+    <!-- Cinematic fog fades at top and bottom of screen -->
+    <div class="fixed inset-0 pointer-events-none z-50" style="background: linear-gradient(to bottom, #f0f9ff 0%, transparent 15%, transparent 85%, #f0f9ff 100%);"></div>
+
+
+    <!-- THE MOTORCYCLE (Fixed Position) -->
+    <!-- It stays perfectly in one place, guaranteeing smooth scroll matching without math conflicts. -->
+    <div class="fixed z-40 pointer-events-none"
+         style="left: var(--road-pos); bottom: 15vh; margin-left: -20px; width: 40px; height: 100px; drop-shadow: 0 10px 20px rgba(14,165,233,0.3);">
+        
+        <!-- Separated rotation container. 
+             CRITICAL: No CSS transitions here to prevent GSAP infinite call stack crashes. -->
+        <div id="vehicle-rotator" class="relative w-full h-full origin-bottom" style="will-change: transform;">
+            
+            <!-- Exhaust flame -->
+            <div id="flame" class="absolute left-1/2 -bottom-6 w-3 h-10 bg-gradient-to-b from-[#0ea5e9] to-transparent rounded-full blur-[2px]" 
+                 style="margin-left: -6px; transform-origin: top center; will-change: transform, opacity; opacity: 0.5;"></div>
+
+            <!-- Sleek High-Tech Bike SVG -->
+            <svg viewBox="0 0 40 100" class="w-full h-full relative z-10 block" fill="none">
+                <!-- Rear Tire -->
+                <rect x="14" y="70" width="12" height="26" rx="3" fill="#334155" stroke="#0f172a" stroke-width="1"/>
+                <!-- Chassis -->
+                <path d="M 10 20 L 30 20 L 36 60 L 26 80 L 14 80 L 4 60 Z" fill="#ffffff" stroke="#0ea5e9" stroke-width="2"/>
+                <!-- Engine Core Glow -->
+                <circle cx="20" cy="55" r="4" fill="#0ea5e9" filter="blur(1px)"/>
+                <!-- Rider Helmet -->
+                <circle cx="20" cy="45" r="7" fill="#0f172a" stroke="#0ea5e9" stroke-width="1.5"/>
+                <path d="M 16 43 Q 20 40 24 43" stroke="#e0f2fe" stroke-width="1" fill="none"/>
+            </svg>
+        </div>
+    </div>
+
+
+    <main class="relative z-10 w-full">
+        
+        <!-- The Absolute Road Track -->
+        <!-- Placed behind content. Dashed line natively scrolls 1:1 with the page. -->
+        <div class="absolute top-0 bottom-0 pointer-events-none border-x border-sky-300/40 bg-white/40 backdrop-blur-md"
+             style="left: var(--road-pos); width: var(--road-width); transform: translateX(-50%);">
+            <!-- Center dashed line -->
+            <div class="absolute top-0 bottom-0 left-1/2 -ml-[2px] w-[4px] road-line-pattern opacity-60"></div>
+        </div>
+
+        <!-- Container for all sections. Structured to STRICTLY PREVENT overlap -->
+        <div class="relative w-full max-w-[1400px] mx-auto flex flex-col pb-[20vh]">
+
+            <!-- 00 // HERO SECTION -->
+            <section class="min-h-screen flex flex-col items-center justify-center relative pt-20 px-6">
+                <div class="text-center z-30 max-w-4xl gsap-fade-up">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 text-sky-600 font-mono text-xs font-semibold mb-8 border border-sky-200 tracking-widest uppercase shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                        System Online
+                    </div>
+                    <h1 class="font-display text-7xl sm:text-[100px] font-black text-slate-900 mb-8 tracking-tighter leading-none">
+                        Rahul <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">Patil.</span>
+                    </h1>
+                    <!-- The Honey scroll-reveal text effect -->
+                    <p class="scroll-reveal-text text-2xl sm:text-4xl text-slate-700 font-display max-w-3xl mx-auto mb-12 leading-snug tracking-tight font-medium">
+                        Web Developer & Computer Science Student. Engineering functional, user-focused digital experiences and seamless API integrations.
+                    </p>
+                    <p class="text-xs text-sky-400 font-mono tracking-widest uppercase mb-2 animate-bounce">Scroll to initiate journey</p>
+                    <div class="h-16 w-[1px] bg-gradient-to-b from-sky-400 to-transparent mx-auto"></div>
+                </div>
+            </section>
+
+            <!-- 01 // ABOUT (Sticky Title + Overlapping Blurry Content) -->
+            <section class="min-h-[120vh] w-full flex items-start relative py-32 px-4 sm:px-8">
+                <!-- Content Box: Left Side -->
+                <div class="w-[var(--card-width)] lg:mr-auto lg:ml-0 ml-auto mr-0 relative">
+                    
+                    <!-- Massive Sticky Background Text -->
+                    <div class="sticky top-1/3 -z-10 mb-20 lg:mb-0 opacity-80">
+                        <div class="font-mono text-[10px] sm:text-xs font-semibold text-sky-400 mb-2 tracking-widest">01 // CORE_MODULE</div>
+                        <h2 class="font-display text-6xl sm:text-8xl font-black text-slate-200 tracking-tighter mix-blend-multiply">About</h2>
+                    </div>
+
+                    <!-- Scrolling Glass Card blurs the title as it passes over -->
+                    <div class="relative z-10 lg:mt-32">
+                        <div class="glass-card bg-white/60 backdrop-blur-2xl p-8 sm:p-12 rounded-3xl relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-sky-400 to-transparent opacity-50"></div>
+                            <h3 class="font-display text-3xl font-bold text-slate-900 mb-6">Engineering Foundations</h3>
+                            <p class="text-slate-600 leading-relaxed mb-6 text-lg">
+                                Currently pursuing my B.Tech in Computer Science and Engineering at Shivaji University (Kolhapur). I am deeply interested in modern web development architectures and writing clean, scalable code.
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-lg">
+                                My focus lies in building functional applications and exploring systems programming. I am actively seeking internships to contribute to real-world software projects.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 02 // SKILLS (Sticky Header with scrolling list) -->
+            <section class="min-h-[150vh] w-full flex items-start relative py-32 px-4 sm:px-8">
+                <!-- Content Box: Right Side -->
+                <div class="w-[var(--card-width)] ml-auto mr-0 relative">
+                    
+                    <div class="sticky top-1/3 -z-10 mb-20 lg:mb-0 opacity-80">
+                        <div class="font-mono text-[10px] sm:text-xs font-semibold text-sky-400 mb-2 tracking-widest">02 // LOAD: TECH_STACK</div>
+                        <h2 class="font-display text-6xl sm:text-8xl font-black text-slate-200 tracking-tighter mix-blend-multiply">Skills</h2>
+                    </div>
+
+                    <div class="relative z-10 lg:mt-32 flex flex-col gap-6">
+                        <!-- Honey-style staggered fading list -->
+                        <div class="glass-card gsap-fade-up bg-white/60 backdrop-blur-2xl p-8 rounded-3xl border border-sky-100 flex items-center gap-6">
+                            <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-500 font-bold font-mono text-xl shadow-inner">JS</div>
+                            <div>
+                                <h3 class="text-slate-900 font-display text-2xl font-bold mb-1">Frontend Core</h3>
+                                <p class="text-slate-500 text-sm">HTML, CSS, JavaScript for responsive, interactive UIs.</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card gsap-fade-up bg-white/60 backdrop-blur-2xl p-8 rounded-3xl border border-sky-100 flex items-center gap-6">
+                            <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-500 font-bold font-mono text-xl shadow-inner">API</div>
+                            <div>
+                                <h3 class="text-slate-900 font-display text-2xl font-bold mb-1">Integrations</h3>
+                                <p class="text-slate-500 text-sm">Connecting third-party web services seamlessly into applications.</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-card gsap-fade-up bg-white/60 backdrop-blur-2xl p-8 rounded-3xl border border-sky-100 flex items-center gap-6">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold font-mono text-xl shadow-inner">C</div>
+                            <div>
+                                <h3 class="text-slate-900 font-display text-2xl font-bold mb-1">Systems & Algorithms</h3>
+                                <p class="text-slate-500 text-sm">C Programming, algorithmic problem solving, and low-level logic.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 03 // PROJECTS (Sticky Title + Overlapping Blurry Content) -->
+            <section class="min-h-[140vh] w-full flex items-start relative py-32 px-4 sm:px-8">
+                <!-- Left Side -->
+                <div class="w-[var(--card-width)] lg:mr-auto lg:ml-0 ml-auto mr-0 relative">
+                    
+                    <div class="sticky top-1/3 -z-10 mb-20 lg:mb-0 opacity-80">
+                        <div class="font-mono text-[10px] sm:text-xs font-semibold text-sky-400 mb-2 tracking-widest">03 // EXECUTE</div>
+                        <h2 class="font-display text-6xl sm:text-8xl font-black text-slate-200 tracking-tighter mix-blend-multiply">Work</h2>
+                    </div>
+
+                    <div class="relative z-10 lg:mt-32">
+                        <div class="glass-card bg-white/60 backdrop-blur-2xl p-8 sm:p-12 rounded-3xl relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-sky-400 to-transparent opacity-50"></div>
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="px-3 py-1 text-xs font-mono bg-sky-50 text-sky-600 rounded-full border border-sky-200 shadow-sm">Academic Project</span>
+                            </div>
+                            <h3 class="font-display text-4xl font-bold text-slate-900 mb-2">Pomodoro Study App</h3>
+                            <p class="text-sky-500 font-mono text-sm mb-8">2nd Year College Project</p>
+                            
+                            <p class="text-slate-600 leading-relaxed mb-8 text-lg">
+                                Engineered a productivity web application utilizing the Pomodoro technique to structure deep work sessions. 
+                                To elevate user engagement, I successfully integrated the <strong class="text-slate-900">Spotify API</strong>, allowing students to seamlessly control and stream music without leaving the study interface.
+                            </p>
+                            
+                            <div class="flex flex-wrap gap-3 pt-6 border-t border-sky-100 font-mono text-sm">
+                                <span class="px-4 py-2 rounded-lg bg-white text-slate-600 shadow-sm border border-slate-100">JavaScript</span>
+                                <span class="px-4 py-2 rounded-lg bg-white text-slate-600 shadow-sm border border-slate-100">HTML/CSS</span>
+                                <span class="px-4 py-2 rounded-lg bg-sky-50 text-sky-600 shadow-sm border border-sky-100">Spotify API</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 04 // EDUCATION -->
+            <section class="min-h-[120vh] w-full flex items-start relative py-32 px-4 sm:px-8">
+                <!-- Right Side -->
+                <div class="w-[var(--card-width)] ml-auto mr-0 relative">
+                    
+                    <div class="sticky top-1/3 -z-10 mb-20 lg:mb-0 opacity-80">
+                        <div class="font-mono text-[10px] sm:text-xs font-semibold text-sky-400 mb-2 tracking-widest">04 // LOG_HISTORY</div>
+                        <h2 class="font-display text-6xl sm:text-8xl font-black text-slate-200 tracking-tighter mix-blend-multiply">Education</h2>
+                    </div>
+
+                    <div class="relative z-10 lg:mt-32">
+                        <div class="glass-card bg-white/60 backdrop-blur-2xl p-8 sm:p-12 rounded-3xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-sky-400 to-transparent opacity-50 hidden lg:block"></div>
+                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-sky-400 to-transparent opacity-50 block lg:hidden"></div>
+                            
+                            <div class="relative border-l-2 border-sky-100 pl-8 ml-2 space-y-12">
+                                <!-- Timeline Item 1 -->
+                                <div class="relative group">
+                                    <div class="absolute -left-[41px] top-1.5 w-4 h-4 bg-sky-500 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.6)] group-hover:scale-150 transition-transform duration-300"></div>
+                                    <div class="text-sky-500 font-mono text-sm mb-3">Oct 2024 – Jul 2028</div>
+                                    <h3 class="font-display text-2xl font-bold text-slate-900 mb-2">B.Tech, Computer Science</h3>
+                                    <p class="text-slate-500 text-lg">Shivaji University, Kolhapur</p>
+                                </div>
+                                <!-- Timeline Item 2 -->
+                                <div class="relative group">
+                                    <div class="absolute -left-[41px] top-1.5 w-4 h-4 bg-slate-300 rounded-full group-hover:bg-sky-300 transition-colors duration-300"></div>
+                                    <div class="text-slate-400 font-mono text-sm mb-3">Sep 2022 – Feb 2024</div>
+                                    <h3 class="font-display text-xl font-bold text-slate-700 mb-2">12th Standard</h3>
+                                    <p class="text-slate-500 text-lg">Sanjay Ghodawat Institute</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 05 // FINAL DESTINATION (Massive Editorial Footer) -->
+            <section class="min-h-screen w-full flex items-center justify-center relative py-20 px-6 mt-20">
+                <!-- End of road glowing platform -->
+                <div class="absolute left-[var(--road-pos)] top-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-sky-400/20 rounded-full blur-[60px] z-10"></div>
+
+                <div class="gsap-fade-up w-full max-w-4xl text-center relative z-30">
+                    <div class="font-mono text-sm font-semibold text-sky-500 mb-8 tracking-widest">05 // END_TRANSMISSION</div>
+                    <h2 class="font-display text-7xl sm:text-[120px] font-black text-slate-900 mb-8 tracking-tighter leading-none">
+                        Let's <br/> <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">Connect.</span>
+                    </h2>
+                    <p class="text-slate-600 font-sans text-lg sm:text-2xl mb-14 max-w-2xl mx-auto leading-relaxed">
+                        Ready to contribute to your engineering team. Reach out for internships, collaborations, or technical discussions.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
+                        <a href="mailto:rp9579@gmail.com" class="glow-button w-full sm:w-auto px-10 py-5 rounded-2xl bg-sky-500 text-white font-display text-xl font-bold transition-all shadow-[0_10px_30px_rgba(14,165,233,0.3)]">
+                            rp9579@gmail.com
+                        </a>
+                        <a href="https://linkedin.com/in/rahulpatil-next" target="_blank" rel="noopener noreferrer" class="glow-button glass-card w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/80 text-sky-600 font-display text-xl font-bold transition-all">
+                            LinkedIn Profile
+                        </a>
+                    </div>
+                    <div class="inline-block px-6 py-3 rounded-full bg-sky-50 border border-sky-100 text-slate-500 font-mono text-sm tracking-wider uppercase">
+                        📍 Sangli, Maharashtra, India
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            gsap.registerPlugin(ScrollTrigger);
+
+            // 1. Initialize Lenis for Cinematic Smooth Scrolling (Optimized)
+            const lenis = new Lenis({
+                lerp: 0.08,          // Use linear interpolation for tight, physics-based smoothing
+                smoothWheel: true,   // Ensure wheel is smoothed
+                smoothTouch: false,  // Let mobile devices handle touch natively for zero lag
+            });
+
+            // Keep GSAP ScrollTrigger in sync with Lenis
+            lenis.on('scroll', ScrollTrigger.update);
+
+            gsap.ticker.add((time) => {
+                lenis.raf(time * 1000);
+            });
+            gsap.ticker.lagSmoothing(0);
+
+            // 2. High-Performance Physics for the Bike using GSAP quickTo
+            // CRITICAL FIX: Ensure NO CSS transitions are applied to these elements in the HTML
+            const vehicle = document.getElementById('vehicle-rotator');
+            const flame = document.getElementById('flame');
+
+            // Pre-set safe defaults
+            gsap.set(flame, { scaleY: 0.5, opacity: 0.5 });
+            gsap.set(vehicle, { rotation: 0 });
+            
+            // Generate extremely fast setters that pipe directly to GPU
+            const rotateBike = gsap.quickTo(vehicle, "rotation", { duration: 0.3, ease: "power2.out" });
+            const scaleFlame = gsap.quickTo(flame, "scaleY", { duration: 0.15, ease: "power2.out" });
+            const opacFlame = gsap.quickTo(flame, "opacity", { duration: 0.15, ease: "power2.out" });
+            
+            // Listen to exact scroll velocity
+            lenis.on('scroll', (e) => {
+                const velocity = e.velocity; 
+                
+                // Lean into turns based on speed (Reduced multiplier for tighter control)
+                let rotation = velocity * 0.25; 
+                // Clamp rotation so it doesn't spin wildly on fast scrolls
+                rotation = Math.max(-15, Math.min(15, rotation)); 
+                
+                // Ignite exhaust based on speed
+                let flameScale = Math.abs(velocity) * 0.15;
+                flameScale = Math.max(0.5, Math.min(2.0, flameScale)); 
+                
+                let flameOpac = Math.abs(velocity) > 0.5 ? 1 : 0.5;
+
+                // Pipe values instantly
+                rotateBike(rotation);
+                scaleFlame(flameScale);
+                opacFlame(flameOpac);
+            });
+
+            // 3. Honey-Inspired Text Reveal (Mimicking Reading)
+            const textElements = document.querySelectorAll('.scroll-reveal-text');
+            textElements.forEach(el => {
+                const text = el.innerText;
+                const words = text.split(' ');
+                el.innerHTML = ''; // clear original text
+                
+                words.forEach(word => {
+                    const span = document.createElement('span');
+                    span.innerText = word + ' ';
+                    span.style.opacity = '0.15'; // Dim by default
+                    span.style.transition = 'opacity 0.1s ease';
+                    el.appendChild(span);
+                });
+
+                // Scrub the opacity as the user scrolls past
+                gsap.to(el.children, {
+                    opacity: 1,
+                    stagger: 0.1,
+                    scrollTrigger: {
+                        trigger: el,
+                        start: "top 75%", // Starts revealing when 75% down the screen
+                        end: "bottom 45%", // Finishes revealing when slightly above middle
+                        scrub: 1, // Smooth scrub linked to scroll
+                    }
+                });
+            });
+
+            // 4. Cinematic Reveal Animations
+            const revealLeft = document.querySelectorAll('.gsap-reveal-left');
+            const revealRight = document.querySelectorAll('.gsap-reveal-right');
+            const fadeUp = document.querySelectorAll('.gsap-fade-up');
+
+            revealLeft.forEach(el => {
+                gsap.fromTo(el, 
+                    { opacity: 0, x: -60, scale: 0.95 },
+                    {
+                        opacity: 1, x: 0, scale: 1, duration: 0.6, ease: "power2.out",
+                        scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none reverse" }
+                    }
+                );
+            });
+
+            revealRight.forEach(el => {
+                gsap.fromTo(el, 
+                    { opacity: 0, x: 60, scale: 0.95 },
+                    {
+                        opacity: 1, x: 0, scale: 1, duration: 0.6, ease: "power2.out",
+                        scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none reverse" }
+                    }
+                );
+            });
+
+            fadeUp.forEach(el => {
+                gsap.fromTo(el, 
+                    { opacity: 0, y: 50 },
+                    {
+                        opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+                        scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none reverse" }
+                    }
+                );
+            });
+        });
+    </script>
+</body>
+</html>
